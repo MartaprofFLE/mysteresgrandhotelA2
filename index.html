@@ -1,0 +1,1319 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Mystères au Grand Hôtel — Dossier de lecture interactif</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,500&family=Courier+Prime:wght@400;700&display=swap');
+
+:root{
+  --navy:#131c31;
+  --navy-2:#1e2a45;
+  --gold:#b8934a;
+  --gold-light:#e3c884;
+  --cream:#f2ead6;
+  --paper:#faf5e8;
+  --wine:#7c2735;
+  --ink:#2a2118;
+  --ink-soft:#5a4d3d;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:
+    radial-gradient(ellipse at top left, #1c2947 0%, transparent 60%),
+    radial-gradient(ellipse at bottom right, #10192c 0%, transparent 55%),
+    var(--navy);
+  color:var(--cream);
+  font-family:'Cormorant Garamond', serif;
+  min-height:100vh;
+}
+
+/* ---------- ACCESSIBILITY / MOTION ---------- */
+:focus-visible{outline:2px solid var(--gold-light);outline-offset:2px;border-radius:3px;}
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto;}
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;}
+}
+@keyframes paperIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 70px;}
+
+/* ---------- HEADER / SIGNATURE ---------- */
+.masthead{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:20px;padding-bottom:18px;border-bottom:1px solid rgba(184,147,74,.35);
+  margin-bottom:22px;flex-wrap:wrap;
+}
+.brand{display:flex;align-items:center;gap:16px;}
+.seal{
+  width:64px;height:64px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, var(--gold-light), var(--gold) 55%, #8a6a2b 100%);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Playfair Display',serif;font-weight:900;color:var(--navy);
+  font-size:22px;box-shadow:0 0 0 3px rgba(184,147,74,.25), 0 6px 18px rgba(0,0,0,.5);
+  flex-shrink:0;
+}
+.brand h1{
+  font-family:'Playfair Display',serif;font-weight:900;font-style:italic;
+  font-size:clamp(26px,4vw,40px);margin:0;letter-spacing:.5px;color:var(--cream);
+  line-height:1.05;
+}
+.brand p{margin:2px 0 0;color:var(--gold-light);font-size:15px;letter-spacing:2px;text-transform:uppercase;}
+
+.progress-box{
+  text-align:right;font-family:'Courier Prime',monospace;color:var(--gold-light);
+  font-size:13px;letter-spacing:1px;min-width:210px;
+}
+.progress-bar-outer{
+  width:210px;height:8px;border:1px solid var(--gold);border-radius:4px;overflow:hidden;
+  margin-top:6px;background:rgba(0,0,0,.3);
+}
+.progress-bar-inner{height:100%;background:linear-gradient(90deg,var(--wine),var(--gold));width:0%;transition:width .5s ease;}
+
+/* ---------- LAYOUT ---------- */
+.layout{display:grid;grid-template-columns:230px 1fr;gap:26px;}
+@media (max-width:800px){
+  .layout{grid-template-columns:1fr;}
+  nav.dossier{
+    position:static;display:flex;overflow-x:auto;gap:6px;padding:8px;
+    -webkit-overflow-scrolling:touch;scrollbar-width:thin;
+  }
+  nav.dossier .tab{
+    flex:0 0 auto;white-space:nowrap;border-left:none;border-bottom:3px solid transparent;
+  }
+  nav.dossier .tab.active{border-left:none;border-bottom:3px solid var(--gold);}
+  nav.dossier .tab .done-dot{margin-left:6px;}
+}
+
+/* ---------- NAV / DOSSIER TABS ---------- */
+nav.dossier{
+  background:linear-gradient(180deg,#182238,#111a2c);
+  border:1px solid rgba(184,147,74,.3);
+  border-radius:6px;padding:10px;
+  height:fit-content;position:sticky;top:16px;
+}
+nav.dossier .tab{
+  display:flex;align-items:baseline;gap:10px;
+  padding:10px 12px;margin-bottom:3px;border-radius:4px;cursor:pointer;
+  color:#c9c0ab;font-family:'Courier Prime',monospace;font-size:13.5px;
+  border-left:3px solid transparent;transition:all .15s ease;
+  position:relative;
+}
+nav.dossier .tab:hover{background:rgba(184,147,74,.1);color:var(--gold-light);}
+nav.dossier .tab.active{
+  background:rgba(184,147,74,.16);border-left:3px solid var(--gold);
+  color:var(--gold-light);font-weight:700;
+}
+nav.dossier .tab .num{color:var(--gold);font-weight:700;}
+nav.dossier .tab .done-dot{
+  margin-left:auto;width:8px;height:8px;border-radius:50%;
+  background:var(--wine);opacity:.25;
+}
+nav.dossier .tab.solved .done-dot{background:#7fae72;opacity:1;box-shadow:0 0 6px #7fae72;}
+nav.dossier .tab.locked{opacity:.35;cursor:not-allowed;}
+nav.dossier .tab.locked:hover{background:none;color:#c9c0ab;}
+nav.dossier .tab .lock-icon{margin-left:auto;font-size:11px;}
+
+.lockmsg{
+  font-family:'Courier Prime',monospace;font-size:13px;color:var(--wine);
+  background:#f3dede;border:1px dashed var(--wine);border-radius:4px;
+  padding:8px 12px;margin-top:10px;display:none;
+}
+
+/* ---------- AUDIO ---------- */
+.audio-box{
+  display:flex;align-items:center;gap:14px;
+  background:linear-gradient(135deg,#1e2a45,#182238);color:var(--gold-light);
+  border:1px solid var(--gold);border-radius:6px;padding:12px 16px;margin-bottom:20px;
+  transition:box-shadow .25s ease;
+}
+.audio-box.playing{box-shadow:0 0 0 1px var(--gold), 0 0 18px rgba(184,147,74,.35);}
+.audio-box .ico{
+  font-size:19px;flex-shrink:0;width:38px;height:38px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 35% 30%, var(--gold-light), var(--gold) 60%, #8a6a2b 100%);
+  color:var(--navy);
+}
+.audio-box .tts-controls{display:flex;align-items:center;gap:8px;margin-top:6px;}
+.audio-box .tts-btn{
+  width:30px;height:30px;border-radius:50%;border:1px solid var(--gold);background:var(--paper);
+  color:var(--wine);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+.audio-box .tts-btn:hover{background:var(--gold-light);}
+.audio-box .tts-rate{
+  font-family:'Courier Prime',monospace;font-size:11px;border:1px solid #cbb888;border-radius:4px;
+  background:var(--paper);color:var(--ink-soft);padding:3px 4px;
+}
+.recit .word, .lede .word{transition:background-color .15s ease;border-radius:3px;}
+.recit .word.word-active, .lede .word.word-active{background:rgba(184,147,74,.4);}
+.audio-box .lbl-row{display:flex;align-items:center;gap:8px;margin-bottom:3px;}
+.audio-box .eq{display:inline-flex;gap:2px;align-items:flex-end;height:11px;opacity:0;transition:opacity .2s;}
+.audio-box.playing .eq{opacity:1;}
+.audio-box .eq span{width:2px;background:var(--gold-light);animation:eqBounce 1s ease-in-out infinite;}
+.audio-box .eq span:nth-child(1){height:40%;animation-delay:-.3s;}
+.audio-box .eq span:nth-child(2){height:100%;animation-delay:-.1s;}
+.audio-box .eq span:nth-child(3){height:65%;animation-delay:-.5s;}
+@keyframes eqBounce{0%,100%{transform:scaleY(.4);}50%{transform:scaleY(1);}}
+.audio-missing{
+  font-family:'Courier Prime',monospace;font-size:12.5px;color:var(--ink-soft);
+  border:1px dashed #cbb888;border-radius:6px;padding:10px 14px;margin-bottom:20px;background:#ece0c3;
+}
+
+/* ---------- BILAN FINAL ---------- */
+.bilan-score{
+  text-align:center;padding:22px 10px;background:linear-gradient(180deg,#f5ecd8,#ece0c3);
+  border:1px solid var(--gold);border-radius:8px;margin-bottom:22px;
+}
+.bilan-score .big{font-family:'Playfair Display',serif;font-weight:900;font-size:52px;color:var(--wine);}
+.bilan-score .lbl{font-family:'Courier Prime',monospace;letter-spacing:2px;text-transform:uppercase;font-size:12px;color:var(--ink-soft);}
+.bilan-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:9px 14px;border-bottom:1px solid #ddc9a0;font-family:'Courier Prime',monospace;font-size:13.5px;
+}
+.bilan-row .tag{padding:2px 8px;border-radius:3px;font-weight:700;font-size:11px;}
+.tag.ok{background:#e2ecd9;color:#2f4423;}
+.tag.mid{background:#f0e2c0;color:#7a5a17;}
+.tag.low{background:#f3dede;color:#6b2530;}
+.review-item{margin:10px 0;padding:10px 14px;background:#f5ecd8;border-left:3px solid var(--wine);border-radius:3px;font-size:15.5px;}
+.reset-link{
+  display:inline-block;margin-top:18px;font-family:'Courier Prime',monospace;font-size:12px;
+  color:var(--wine);cursor:pointer;text-decoration:underline;
+}
+
+/* ---------- MAIN CONTENT / PAPER CARD ---------- */
+.paper{
+  background:
+    linear-gradient(180deg, var(--paper), #f4ecd9 90%);
+  color:var(--ink);
+  border-radius:4px;
+  box-shadow:0 20px 45px rgba(0,0,0,.45), 0 0 0 1px rgba(184,147,74,.25);
+  padding:38px 42px;
+  position:relative;
+  min-height:520px;
+  animation:paperIn .45s ease;
+}
+.paper::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:6px;
+  background:linear-gradient(90deg,var(--wine),var(--gold),var(--wine));
+  border-radius:4px 4px 0 0;
+}
+.chapter-eyebrow{
+  font-family:'Courier Prime',monospace;text-transform:uppercase;letter-spacing:3px;
+  font-size:12px;color:var(--wine);font-weight:700;
+}
+.chapter-title{
+  font-family:'Playfair Display',serif;font-weight:900;font-style:italic;
+  font-size:clamp(28px,3.4vw,42px);margin:2px 0 18px;color:var(--navy);
+}
+.lede{font-size:20px;line-height:1.55;color:var(--ink-soft);margin-bottom:8px;}
+.recit{font-size:19px;line-height:1.75;color:var(--ink);}
+.recit p{margin:0 0 14px;}
+.dropcap::first-letter{
+  font-family:'Playfair Display',serif;font-size:64px;font-weight:900;
+  float:left;line-height:.8;padding:6px 8px 0 0;color:var(--wine);
+}
+
+.divider{
+  display:flex;align-items:center;gap:10px;margin:28px 0 20px;color:var(--gold);
+}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.divider span{font-family:'Courier Prime',monospace;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--wine);white-space:nowrap;}
+
+.vocab-box{
+  background:#ece0c3;border:1px dashed var(--gold);border-radius:4px;
+  padding:16px 20px;margin:20px 0;font-family:'Courier Prime',monospace;font-size:13.5px;
+  color:var(--ink-soft);
+}
+.vocab-box b{color:var(--navy);}
+.vocab-list{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:8px;}
+.vocab-list span{white-space:nowrap;}
+.vocab-list em{color:var(--wine);font-style:normal;font-weight:700;}
+
+/* ---------- QUIZ ---------- */
+.quiz{margin-top:8px;}
+.q{
+  background:rgba(19,28,49,.03);border:1px solid rgba(124,39,53,.25);
+  border-radius:6px;padding:16px 18px;margin-bottom:14px;
+}
+.q .qtext{font-size:18px;font-weight:600;margin-bottom:10px;color:var(--navy);}
+.opt{
+  display:block;width:100%;text-align:left;background:var(--paper);
+  border:1px solid #cbb888;border-radius:4px;padding:9px 14px;margin-bottom:7px;
+  font-family:'Cormorant Garamond',serif;font-size:16.5px;color:var(--ink);cursor:pointer;
+  transition:.15s ease;
+}
+.opt:hover{border-color:var(--wine);background:#f5ecd8;transform:translateX(2px);}
+.opt.correct{background:#e2ecd9;border-color:#6f9b5c;color:#2f4423;font-weight:700;}
+.opt.wrong{background:#f3dede;border-color:var(--wine);color:#6b2530;font-weight:700;}
+.opt[disabled]{cursor:default;}
+.feedback{font-size:14px;font-family:'Courier Prime',monospace;margin-top:4px;color:var(--ink-soft);min-height:18px;}
+
+.nav-buttons{display:flex;justify-content:space-between;margin-top:32px;}
+.btn{
+  font-family:'Courier Prime',monospace;text-transform:uppercase;letter-spacing:1.5px;
+  font-size:13px;background:var(--navy);color:var(--gold-light);border:1px solid var(--gold);
+  padding:11px 20px;border-radius:4px;cursor:pointer;transition:.15s ease;
+}
+.btn:hover{background:var(--wine);color:var(--cream);transform:translateY(-1px);box-shadow:0 4px 10px rgba(0,0,0,.35);}
+.btn:disabled{opacity:.3;cursor:not-allowed;}
+
+.cover-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:30px;}
+@media (max-width:700px){.cover-grid{grid-template-columns:1fr;}}
+@media (max-width:600px){
+  .paper{padding:26px 20px;}
+  .wrap{padding:18px 12px 50px;}
+}
+.character{
+  border:1px solid #cbb888;border-radius:6px;padding:12px 16px;margin-bottom:10px;
+  background:#f5ecd8;
+}
+.character b{color:var(--wine);font-family:'Playfair Display',serif;font-style:italic;}
+
+footer.note{
+  text-align:center;color:#8a93ab;font-family:'Courier Prime',monospace;
+  font-size:11.5px;margin-top:22px;letter-spacing:.5px;line-height:1.6;
+}
+
+/* ---------- PRINT / PDF EXPORT ---------- */
+#printArea{position:absolute;left:-99999px;top:0;width:760px;background:white;color:var(--ink);}
+#printArea .print-chapter{padding:20px 0;page-break-after:always;}
+#printArea .print-cover{text-align:center;padding:60px 20px;}
+#printArea .print-cover h1{font-family:'Playfair Display',serif;font-style:italic;font-size:34px;color:var(--navy);}
+@media print{
+  body *{visibility:hidden;}
+  #printArea, #printArea *{visibility:visible;}
+  #printArea{position:absolute;left:0;top:0;width:100%;}
+  #printArea .recit, #printArea .chapter-title, #printArea .vocab-box{color:#000 !important;}
+}
+#printArea .print-cover-fields{
+  font-family:'Courier Prime',monospace;font-size:14px;margin-top:28px;
+  display:inline-block;text-align:left;
+}
+#printArea .print-cover-fields div{margin-bottom:10px;}
+#printArea .print-cover-fields span{color:#7c2735;font-weight:700;margin-right:6px;}
+#printArea .print-answer{margin:10px 0 14px;}
+#printArea .print-q{font-weight:600;font-size:14px;margin-bottom:3px;}
+#printArea .print-a{font-size:14px;padding-left:14px;color:#2a2118;}
+#printArea .print-resume-text{
+  font-size:14px;line-height:2.1;white-space:pre-wrap;border:1px solid #cbb888;
+  border-radius:4px;padding:16px;margin-top:10px;
+}
+#printArea .print-resume-count{font-family:'Courier Prime',monospace;font-size:11px;color:#5a4d3d;margin-top:6px;}
+#printArea .print-score{font-family:'Playfair Display',serif;font-weight:900;font-size:30px;color:#7c2735;margin-top:10px;}
+
+/* ---------- STUDENT INFO CARD ---------- */
+.student-card{
+  background:linear-gradient(180deg,#f5ecd8,#ece0c3);color:var(--ink);
+  border:1px solid var(--gold);border-radius:6px;padding:16px 20px;margin-bottom:20px;
+}
+.student-card-title{font-family:'Courier Prime',monospace;font-weight:700;letter-spacing:1px;font-size:13px;color:var(--wine);text-transform:uppercase;margin-bottom:10px;}
+.student-fields{display:flex;flex-wrap:wrap;gap:14px;}
+.student-fields label{display:flex;flex-direction:column;gap:4px;font-family:'Courier Prime',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft);flex:1 1 160px;}
+.student-fields input{
+  font-family:'Cormorant Garamond',serif;font-size:16px;padding:7px 10px;border:1px solid #cbb888;
+  border-radius:4px;background:var(--paper);color:var(--ink);
+}
+.student-card-hint{margin:10px 0 0;font-size:12.5px;color:var(--ink-soft);font-style:italic;}
+
+/* ---------- RESUME PERSONNEL ---------- */
+.resume-box{margin-top:18px;}
+.resume-box textarea{
+  width:100%;min-height:260px;font-family:'Cormorant Garamond',serif;font-size:17px;line-height:1.6;
+  padding:16px;border:1px solid #cbb888;border-radius:6px;background:var(--paper);color:var(--ink);resize:vertical;
+}
+.resume-meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-family:'Courier Prime',monospace;font-size:12.5px;color:var(--ink-soft);}
+.resume-status.ok{color:#2f4423;font-weight:700;}
+.resume-status.low{color:var(--wine);font-weight:700;}
+.resume-warning{
+  margin-top:10px;font-family:'Courier Prime',monospace;font-size:13px;color:var(--wine);
+  background:#f3dede;border:1px dashed var(--wine);border-radius:4px;padding:8px 12px;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <div class="brand">
+      <div class="seal">MGH</div>
+      <div>
+        <h1>Mystères au Grand Hôtel</h1>
+        <p>Dossier d'enquête &amp; de lecture — Niveau A2</p>
+      </div>
+    </div>
+    <div class="progress-box">
+      ENQUÊTE RÉSOLUE : <span id="scoreLabel">0 / 0</span>
+      <div class="progress-bar-outer"><div class="progress-bar-inner" id="progressBar"></div></div>
+      <button class="btn" style="margin-top:10px;font-size:11px;padding:8px 14px;" onclick="preparePrint()">🖨️ Version imprimable / PDF</button>
+    </div>
+  </div>
+
+  <div class="student-card" id="studentCard">
+    <div class="student-card-title">📋 Informations pour le dossier PDF</div>
+    <div class="student-fields">
+      <label>Prénom
+        <input type="text" id="stuFirstName" placeholder="Prénom" oninput="saveStudentInfo()">
+      </label>
+      <label>Nom
+        <input type="text" id="stuLastName" placeholder="Nom" oninput="saveStudentInfo()">
+      </label>
+      <label>Classe
+        <input type="text" id="stuClasse" placeholder="ex. 3e ESO" oninput="saveStudentInfo()">
+      </label>
+      <label>Date
+        <input type="date" id="stuDate" oninput="saveStudentInfo()">
+      </label>
+    </div>
+    <p class="student-card-hint">Remplis ces champs avant de cliquer sur « Version imprimable / PDF » : ils apparaîtront sur la page de couverture de ton dossier.</p>
+  </div>
+
+  <div class="layout">
+    <nav class="dossier" id="navTabs"></nav>
+    <div class="paper" id="paperContent"></div>
+  </div>
+
+  <div id="printArea"></div>
+
+  <footer class="note">
+    Résumés, questions et exercices originaux inspirés de l'histoire « Mystères au Grand Hôtel »<br>
+    de Marie-Claire Bertrand &amp; Sarah Guilmault (éd. CIDEB, coll. Lire et s'entraîner, niveau A2).
+  </footer>
+</div>
+
+<script>
+const chapters = [
+{
+  id:"couverture", tab:"Couverture", eyebrow:"Présentation du dossier",
+  title:"Mystères au Grand Hôtel", audioLabel:"Titre",
+  body:`
+  <div class="cover-grid">
+    <div>
+      <p class="lede">Un été à Genève, un hôtel Belle Époque au bord du lac, et une série de morts que personne
+      ne peut expliquer... Voici votre dossier de lecture interactif pour suivre l'enquête, chapitre après chapitre,
+      et vérifier votre compréhension du récit.</p>
+      <div class="divider"><span>Comment ça marche</span></div>
+      <p class="lede" style="font-size:17px;">Choisissez un chapitre dans le classeur à gauche. Lisez le résumé, observez le
+      vocabulaire encadré, puis répondez aux questions de l'enquête. Chaque bonne réponse allume un indice vert dans
+      votre classeur — reconstituez le dossier complet jusqu'au chapitre 10 !</p>
+    </div>
+    <div>
+      <div class="character"><b>Caroline</b> — 17 ans, lycéenne niçoise, polyglotte. Elle passe l'été à travailler
+      dans l'hôtel de son oncle plutôt qu'en vacances avec ses parents.</div>
+      <div class="character"><b>Georges</b> — l'oncle de Caroline, grand chef cuisinier, tout juste engagé au
+      Grand Hôtel de Genève.</div>
+      <div class="character"><b>M. Grandin</b> — le directeur de l'hôtel, élégant et très soucieux de la réputation
+      de l'établissement.</div>
+      <div class="character"><b>Mme Moreau</b> — l'assistante du directeur, calme et un peu mystérieuse.</div>
+      <div class="character"><b>Richard</b> — étudiant américain en médecine, responsable de la salle de sport
+      pour l'été. Il devient le meilleur ami de Caroline.</div>
+      <div class="character"><b>M. Henry</b> — le second cuisinier, jaloux de Georges.</div>
+      <div class="character"><b>M. et Mme Newman</b> — un couple de clients très riches, venus des États-Unis.</div>
+    </div>
+  </div>`,
+  quiz:[]
+},
+{
+  id:"ch1", audioLabel:"Chapitre 1", tab:"Ch. 1", eyebrow:"Chapitre 1",
+  title:"Le départ",
+  body:`<div class="recit dropcap">
+  <p>Pour la première fois de sa vie, Caroline quitte Nice toute seule. Dans le train qui l'emmène vers Genève,
+  elle repense à sa chance : au lieu de passer l'été à la plage avec ses parents et son petit frère Pierre,
+  elle va travailler chez son oncle Georges, un grand cuisinier qui vient d'accepter un poste dans un hôtel
+  de luxe suisse. Sa mère, toujours un peu inquiète, a fini par accepter le projet.</p>
+  <p>Caroline a dix-sept ans, elle parle déjà plusieurs langues et rêve, plus tard, de diriger elle-même un
+  grand hôtel. Le voyage passe par Marseille puis Lyon, avant l'arrivée à Genève, où son oncle l'attend
+  avec impatience sur le quai de la gare.</p>
+  </div>
+  <div class="vocab-box"><b>Vocabulaire clé</b>
+    <div class="vocab-list">
+      <span><em>agité(e)</em> — nerveux, qui n'arrive pas à se calmer</span>
+      <span><em>angoissé(e)</em> — très inquiet</span>
+      <span><em>la classe de terminale</em> — dernière année de lycée</span>
+      <span><em>polyglotte</em> — qui parle plusieurs langues</span>
+    </div>
+  </div>`,
+  quiz:[
+    {q:"Pourquoi Caroline est-elle si contente au début de l'histoire ?",
+     opts:["Parce qu'elle part en vacances à la mer avec sa famille","Parce que, pour la première fois, elle ne part pas en vacances avec ses parents","Parce qu'elle a gagné un voyage gratuit"],
+     a:1, exp:"Elle est ravie de vivre une expérience seule, loin de sa famille."},
+    {q:"Quel est le lien entre Caroline et Georges ?",
+     opts:["Georges est son père","Georges est le frère de sa mère","Georges est son professeur"],
+     a:1, exp:"Georges est l'oncle de Caroline, frère de sa mère."},
+    {q:"Quel est le métier de Georges ?",
+     opts:["Directeur d'hôtel","Chef cuisinier","Chauffeur de train"],
+     a:1, exp:"Georges est un grand chef cuisinier qui vient d'être engagé à Genève."}
+  ]
+},
+{
+  id:"ch2", audioLabel:"Chapitre 2", tab:"Ch. 2", eyebrow:"Chapitre 2",
+  title:"Le Grand Hôtel",
+  body:`<div class="recit dropcap">
+  <p>À la gare, l'oncle et la nièce se retrouvent avec émotion : ils se voient si rarement ! En voiture, ils
+  rejoignent l'hôtel, une magnifique construction de style Belle Époque, posée au bord du lac et entourée de
+  jardins soignés. Caroline reste sans voix devant la beauté du lieu.</p>
+  <p>Sa chambre, au dernier étage, est simple mais offre une vue splendide sur le lac. Le lendemain, Georges
+  présente sa nièce à Monsieur Grandin, le directeur : un homme élégant qui explique en détail les tâches
+  qu'elle devra accomplir. Pour fêter cette arrivée, l'oncle emmène Caroline dîner dans le meilleur restaurant
+  de la ville.</p>
+  </div>
+  <div class="vocab-box"><b>Grammaire — L'impératif</b>
+    <div class="vocab-list">
+      <span>« <em>Viens</em>, je vais te montrer ta chambre ! »</span>
+      <span>« <em>Installe-toi</em> tranquillement. »</span>
+      <span>Rappel : l'impératif se conjugue sans sujet, seulement aux personnes <em>tu, nous, vous</em>.</span>
+    </div>
+  </div>`,
+  quiz:[
+    {q:"Comment est décrit le bâtiment de l'hôtel ?",
+     opts:["Un immeuble moderne en verre","Une construction de style Belle Époque au bord d'un lac","Un petit chalet de montagne"],
+     a:1, exp:"L'hôtel date de la fin du XIXe siècle, style Belle Époque, au bord d'un lac."},
+    {q:"Comment est la chambre de Caroline ?",
+     opts:["Immense et très luxueuse","Simple, mais avec une belle vue sur le lac","Sans fenêtre"],
+     a:1, exp:"Ce n'est pas la chambre la plus luxueuse, mais la vue est superbe."},
+    {q:"Que fait Monsieur Grandin avec Caroline le lendemain ?",
+     opts:["Il l'emmène en vacances","Il lui explique les tâches qu'elle devra faire à l'hôtel","Il lui donne un jour de congé"],
+     a:1, exp:"Le directeur présente à Caroline le fonctionnement de l'hôtel et ses futures tâches."}
+  ]
+},
+{
+  id:"ch3", audioLabel:"Chapitre 3", tab:"Ch. 3", eyebrow:"Chapitre 3",
+  title:"La première journée de travail",
+  body:`<div class="recit dropcap">
+  <p>Le grand jour arrive. Georges accueille sa nièce dans les cuisines avec beaucoup d'affection. Peu après,
+  Monsieur Grandin — toujours ponctuel — vient lui présenter le programme précis de sa journée : service du
+  petit-déjeuner, aide au ménage des chambres, pause déjeuner, aide en cuisine, puis réception l'après-midi.</p>
+  <p>Caroline fait aussi la connaissance de Madame Moreau, l'assistante du directeur : une femme distinguée
+  d'une cinquantaine d'années, sympathique mais dont l'air un peu mystérieux intimide la jeune fille. Caroline
+  demande timidement si elle pourra utiliser la salle de sport pendant sa pause — la réponse est oui, à condition
+  de ne pas déranger les clients.</p>
+  </div>
+  <div class="vocab-box"><b>Vocabulaire clé</b>
+    <div class="vocab-list">
+      <span><em>une nièce</em> — la fille de son frère ou de sa sœur</span>
+      <span><em>être sur les talons de quelqu'un</em> — le suivre de très près</span>
+      <span><em>un hôte</em> (ici) — un client de l'hôtel</span>
+    </div>
+  </div>`,
+  quiz:[
+    {q:"Qui explique à Caroline le programme précis de sa journée ?",
+     opts:["Sa mère","Monsieur Grandin, le directeur","Richard"],
+     a:1, exp:"Le directeur, toujours à l'heure, lui remet le plan détaillé de sa journée."},
+    {q:"Que demande timidement Caroline au directeur ?",
+     opts:["Un jour de congé supplémentaire","La permission d'utiliser la salle de sport pendant sa pause","Une augmentation de salaire"],
+     a:1, exp:"Elle veut profiter de la salle de sport de l'hôtel pendant sa pause."},
+    {q:"Comment Caroline perçoit-elle Madame Moreau au premier abord ?",
+     opts:["Comme une femme froide et antipathique","Comme sympathique, mais avec un air mystérieux","Comme quelqu'un qu'elle connaît déjà bien"],
+     a:1, exp:"Madame Moreau semble gentille, mais son air mystérieux intimide un peu Caroline."}
+  ]
+},
+{
+  id:"ch4", audioLabel:"Chapitre 4", tab:"Ch. 4", eyebrow:"Chapitre 4",
+  title:"Un nouvel ami",
+  body:`<div class="recit dropcap">
+  <p>Pendant sa pause, Caroline découvre la salle de sport de l'hôtel, installée dans un ancien bâtiment
+  d'écurie, magnifiquement rénové. Une voix avec un léger accent américain lui propose son aide : c'est
+  Richard, vingt ans, étudiant en médecine à Boston, dont les grands-parents sont français. Il travaille
+  ici pour l'été et gère la salle de sport.</p>
+  <p>Richard aimerait progresser en français, la langue de ses grands-parents, mais il manque de temps pour
+  suivre des cours. Caroline a alors une idée : ils pourraient s'échanger des cours, elle en français, lui
+  en anglais. Rendez-vous est pris pour le soir même, à huit heures, dans la salle de sport.</p>
+  </div>
+  <div class="vocab-box"><b>Grammaire — Situer dans l'espace</b>
+    <div class="vocab-list">
+      <span><em>à côté de</em>, <em>devant</em>, <em>derrière</em>, <em>sur</em>, <em>sous</em>, <em>en face de</em></span>
+      <span>« La salle de sport se trouve <em>à côté de</em> l'hôtel. »</span>
+    </div>
+  </div>`,
+  quiz:[
+    {q:"D'où vient Richard, et quel est son lien avec la France ?",
+     opts:["Il est né à Paris et n'a jamais vécu ailleurs","Il vient de Boston, mais ses grands-parents sont français","Il est suisse, de Genève"],
+     a:1, exp:"Richard vient des États-Unis (Boston), et ses grands-parents sont d'origine française."},
+    {q:"Quel accord Caroline et Richard finissent-ils par conclure ?",
+     opts:["Ils décident de ne plus se revoir","Ils s'échangent des cours : français contre anglais","Richard donne des cours de sport à Caroline"],
+     a:1, exp:"Caroline propose un échange linguistique : elle enseigne le français, il enseigne l'anglais."},
+    {q:"Quelle est l'occupation d'été de Richard à l'hôtel ?",
+     opts:["Il est réceptionniste","Il est responsable de la salle de sport","Il est cuisinier"],
+     a:1, exp:"Pendant deux mois, il gère le fonctionnement de la salle de sport."}
+  ]
+},
+{
+  id:"ch5", audioLabel:"Chapitre 5", tab:"Ch. 5", eyebrow:"Chapitre 5",
+  title:"Monsieur Henry",
+  body:`<div class="recit dropcap">
+  <p>Un matin, pendant le petit-déjeuner du personnel, un homme petit et rond, avec une moustache un peu
+  ridicule, entre brutalement dans la cuisine et se moque ouvertement de Caroline. C'est Monsieur Henry,
+  le second cuisinier de l'hôtel — celui qui prépare les repas quand Georges n'est pas disponible.</p>
+  <p>Sara, une autre jeune employée d'origine marocaine, explique à Caroline la vraie raison de cette
+  attitude : Henry est jaloux de Georges, qui cuisine mieux que lui et qui est toujours choisi pour les
+  grandes réceptions. Ce jour-là, justement, Georges prépare les derniers détails d'une grande fête prévue
+  le samedi suivant, pour l'anniversaire d'une cliente très riche.</p>
+  </div>
+  <div class="vocab-box"><b>Vocabulaire clé</b>
+    <div class="vocab-list">
+      <span><em>être jaloux/jalouse</em> — souffrir du succès d'un autre</span>
+      <span><em>une ordure</em> (familier) — une insulte grave</span>
+      <span><em>menacer</em> — faire peur en annonçant du mal</span>
+    </div>
+  </div>`,
+  quiz:[
+    {q:"Pourquoi Monsieur Henry n'aime-t-il pas Georges ?",
+     opts:["Parce que Georges est jaloux de lui","Parce que Georges cuisine mieux que lui et est choisi pour les grandes fêtes","Parce que Georges lui a volé de l'argent"],
+     a:1, exp:"Henry est le second cuisinier ; il est jaloux du talent et du statut de Georges."},
+    {q:"Quel événement Georges prépare-t-il activement à la fin du chapitre ?",
+     opts:["Un mariage","Une grande fête d'anniversaire pour une cliente riche, le samedi suivant","Son propre départ de l'hôtel"],
+     a:1, exp:"Georges organise le repas d'une soirée d'anniversaire prévue le week-end suivant."},
+    {q:"Qui explique à Caroline la vraie raison du comportement d'Henry ?",
+     opts:["Monsieur Grandin","Sara","Sa mère"],
+     a:1, exp:"C'est Sara, sa collègue, qui lui révèle la jalousie d'Henry envers Georges."}
+  ]
+},
+{
+  id:"ch6", audioLabel:"Chapitre 6", tab:"Ch. 6", eyebrow:"Chapitre 6",
+  title:"Un incident déplaisant",
+  body:`<div class="recit dropcap">
+  <p>Le soir de la grande fête, la terrasse de l'hôtel est splendide, éclairée de bougies et décorée de
+  fleurs rares. Les invités, venus du monde entier, portent des tenues de soirée élégantes. Madame Newman,
+  l'épouse d'un célèbre milliardaire américain, fête son anniversaire — même si, selon les rumeurs du
+  personnel, elle ment sur son âge réel.</p>
+  <p>Au moment de porter un toast, alors que tout le monde s'apprête à célébrer, Monsieur Newman porte
+  soudain la main à son cœur, puis s'écroule. Malgré l'arrivée rapide d'un médecin, il n'y a plus rien à
+  faire : il est mort, apparemment d'un infarctus. La soirée se termine dans le choc et l'incompréhension.</p>
+  </div>
+  <div class="vocab-box"><b>Grammaire — Le comparatif</b>
+    <div class="vocab-list">
+      <span><em>plus... que</em>, <em>aussi... que</em>, <em>moins... que</em></span>
+      <span>« Monsieur Newman est <em>plus</em> vieux <em>que</em> sa femme. »</span>
+    </div>
+  </div>`,
+  quiz:[
+    {q:"Qui est Madame Newman ?",
+     opts:["Une ancienne actrice, épouse d'un milliardaire américain","La cuisinière de l'hôtel","La sœur de Caroline"],
+     a:0, exp:"Selon les rumeurs, c'était une petite actrice avant d'épouser le riche Monsieur Newman."},
+    {q:"Que se passe-t-il pendant la fête, juste avant le toast ?",
+     opts:["Monsieur Newman offre un cadeau à sa femme","Monsieur Newman s'écroule et meurt","Monsieur Henry fait un scandale"],
+     a:1, exp:"Monsieur Newman porte la main à son cœur et meurt, apparemment d'un infarctus."},
+    {q:"Quelle rumeur circule sur Madame Newman avant le drame ?",
+     opts:["Elle serait très généreuse avec le personnel","Elle mentirait sur son âge","Elle détesterait son mari en public"],
+     a:1, exp:"Le personnel pense qu'elle prétend avoir quarante ans alors qu'elle est plus âgée."}
+  ]
+},
+{
+  id:"ch7", audioLabel:"Chapitre 7", tab:"Ch. 7", eyebrow:"Chapitre 7",
+  title:"Encore un incident déplaisant",
+  body:`<div class="recit dropcap">
+  <p>Le lendemain, une atmosphère triste règne dans l'hôtel : Monsieur Newman était très apprécié de tous.
+  Pendant leur pause, Caroline retrouve Richard, qui se montre étonnamment sceptique : selon lui, un homme
+  aussi sportif et en forme que Monsieur Newman ne pouvait pas mourir aussi simplement d'un infarctus.</p>
+  <p>Ses doutes se confirment quand un second incident survient : une baronne autrichienne, âgée mais très
+  dynamique, meurt à son tour, brutalement, en plein repas. Encore une fois, le médecin parle d'infarctus.
+  Cette fois, la presse commence à s'intéresser à l'hôtel, et sa réputation est menacée.</p>
+  </div>
+  <div class="vocab-box"><b>Vocabulaire clé</b>
+    <div class="vocab-list">
+      <span><em>se plaindre</em> — exprimer son mécontentement</span>
+      <span><em>à l'improviste</em> — sans prévenir, soudainement</span>
+      <span><em>un décès</em> — une mort</span>
+    </div>
+  </div>`,
+  quiz:[
+    {q:"Pourquoi Richard doute-t-il de la version officielle sur la mort de M. Newman ?",
+     opts:["Parce que M. Newman était très sportif et en pleine forme","Parce que Richard a vu le meurtrier","Parce que le médecin le lui a avoué"],
+     a:0, exp:"Richard sait que M. Newman faisait beaucoup de sport et nageait bien : l'infarctus le surprend."},
+    {q:"Qui est la deuxième victime ?",
+     opts:["Une baronne autrichienne","Madame Moreau","Sara"],
+     a:0, exp:"Une baronne âgée et excentrique meurt subitement pendant son repas."},
+    {q:"Quelle est la conséquence de ce deuxième décès sur l'image de l'hôtel ?",
+     opts:["Aucune, personne ne s'en soucie","La presse commence à s'y intéresser et la réputation de l'hôtel est menacée","L'hôtel reçoit un prix touristique"],
+     a:1, exp:"Les journaux commencent à parler de ces morts suspectes, ce qui inquiète le directeur."}
+  ]
+},
+{
+  id:"ch8", audioLabel:"Chapitre 8", tab:"Ch. 8", eyebrow:"Chapitre 8",
+  title:"La malchance continue",
+  body:`<div class="recit dropcap">
+  <p>La tension monte encore d'un cran quand un troisième client meurt, cette fois beaucoup plus jeune que
+  les précédentes victimes. Le médecin, inquiet, décide enfin d'alerter la police. L'autopsie révèle la
+  vérité choquante : les trois personnes ont bien été empoisonnées.</p>
+  <p>Le commissaire interroge tout le personnel et découvre vite la scène de jalousie entre Henry et Georges.
+  Pour la police, Henry devient le suspect numéro un : il aurait un mobile évident, se venger de Georges en
+  le faisant accuser. Henry proteste de son innocence, mais il doit rester à disposition des enquêteurs.</p>
+  </div>
+  <div class="vocab-box"><b>Grammaire — L'interrogation</b>
+    <div class="vocab-list">
+      <span>Intonation : <em>Elle joue la comédie ?</em></span>
+      <span>Est-ce que : <em>Est-ce qu'elle joue la comédie ?</em></span>
+      <span>Inversion : <em>Est-il l'assassin ?</em></span>
+    </div>
+  </div>`,
+  quiz:[
+    {q:"Que révèle l'autopsie des trois victimes ?",
+     opts:["Elles sont mortes de vieillesse","Elles ont toutes été empoisonnées","Elles se sont noyées"],
+     a:1, exp:"L'autopsie prouve que les trois morts ne sont pas naturelles : c'est un empoisonnement."},
+    {q:"Qui devient le suspect numéro un pour la police ?",
+     opts:["Georges","Monsieur Henry","Richard"],
+     a:1, exp:"Le commissaire pense qu'Henry a un mobile : se venger de Georges et l'accuser."},
+    {q:"Comment réagit Henry face aux soupçons ?",
+     opts:["Il avoue immédiatement être le coupable","Il proteste de son innocence","Il s'enfuit à l'étranger"],
+     a:1, exp:"Henry affirme qu'il est innocent, même s'il admet avoir été jaloux de Georges."}
+  ]
+},
+{
+  id:"ch9", audioLabel:"Chapitre 9", tab:"Ch. 9", eyebrow:"Chapitre 9",
+  title:"La fin d'un cauchemar",
+  body:`<div class="recit dropcap">
+  <p>Le soir même, Richard a un déclic : n'importe qui peut entrer dans la cuisine la nuit pour empoisonner
+  les plats de Georges. En pleine discussion avec Caroline, il se souvient avoir vu une lumière suspecte
+  dans la cuisine, une nuit précédente. Les deux amis décident d'aller vérifier sur place.</p>
+  <p>Dans la cuisine plongée dans le noir, ils surprennent une silhouette près du coin des épices : c'est
+  Madame Newman elle-même, en train de chercher le bocal contenant le poison, pour effacer toute preuve.
+  Découverte, elle attaque Caroline et tente de l'étrangler. Richard intervient juste à temps, et le bruit
+  de la lutte alerte le gardien de nuit, qui appelle la police. Madame Newman, prise sur le fait, finit par
+  avouer : elle voulait seulement l'héritage de son mari, et a tué les deux autres clients pour faire croire
+  qu'Henry était le meurtrier.</p>
+  </div>
+  <div class="vocab-box"><b>Vocabulaire clé</b>
+    <div class="vocab-list">
+      <span><em>à pas de loup</em> — très silencieusement</span>
+      <span><em>une empreinte</em> — trace laissée par les doigts</span>
+      <span><em>avouer</em> — reconnaître sa faute</span>
+    </div>
+  </div>`,
+  quiz:[
+    {q:"Qui Caroline et Richard surprennent-ils dans la cuisine, la nuit ?",
+     opts:["Monsieur Henry","Madame Newman","Le gardien de nuit"],
+     a:1, exp:"C'est Madame Newman, en train de chercher le bocal de poison pour effacer les preuves."},
+    {q:"Quel est le véritable mobile de la meurtrière ?",
+     opts:["La vengeance envers son mari","L'héritage de son mari milliardaire","La jalousie envers Caroline"],
+     a:1, exp:"Elle avoue avoir agi seulement pour l'argent, l'héritage de son mari."},
+    {q:"Comment l'affaire se termine-t-elle pour Madame Newman ?",
+     opts:["Elle s'échappe","Elle est arrêtée après avoir avoué ses crimes","Elle est innocentée par la police"],
+     a:1, exp:"Prise sur le fait et confondue par un témoin, elle finit par tout avouer."}
+  ]
+},
+{
+  id:"ch10", audioLabel:"Chapitre 10", tab:"Ch. 10", eyebrow:"Chapitre 10",
+  title:"Six mois plus tard",
+  body:`<div class="recit dropcap">
+  <p>Six mois après ces événements, toute la famille de Caroline se retrouve à l'aéroport de Nice : la
+  jeune fille s'envole pour Boston, où l'attend Richard. Pendant le vol, elle repense à cette aventure
+  incroyable : Madame Newman est en prison en Suisse, et le Grand Hôtel a retrouvé sa clientèle et sa bonne
+  réputation.</p>
+  <p>La vie a bien changé pour tout le monde : Monsieur Grandin et Madame Moreau se sont mariés ; Henry et
+  Georges, réconciliés, ont même préparé le repas de leur mariage ensemble ; Georges a quitté l'hôtel pour
+  ouvrir son propre restaurant à Avignon ; Henry est devenu le cuisinier principal du Grand Hôtel ; et Sara
+  travaille désormais à la réception. Caroline, elle, s'envole vers de nouvelles aventures — bien moins
+  dangereuses, cette fois !</p>
+  </div>
+  <div class="vocab-box"><b>Pour aller plus loin</b>
+    <div class="vocab-list">
+      <span>Et vous ? Imaginez une autre fin pour Caroline, Richard, ou un autre personnage de l'histoire.</span>
+    </div>
+  </div>`,
+  quiz:[
+    {q:"Où Caroline s'envole-t-elle à la fin de l'histoire ?",
+     opts:["À Genève, pour continuer à travailler à l'hôtel","À Boston, pour retrouver Richard","À Paris, pour ses études"],
+     a:1, exp:"Elle part rejoindre Richard aux États-Unis pour les fêtes de fin d'année."},
+    {q:"Que devient Madame Newman ?",
+     opts:["Elle est en prison en Suisse","Elle rachète l'hôtel","Elle part vivre à Boston"],
+     a:0, exp:"Après ses aveux, elle est emprisonnée en Suisse."},
+    {q:"Que décide de faire l'oncle Georges après ces événements ?",
+     opts:["Il reste chef cuisinier du Grand Hôtel pour toujours","Il ouvre son propre restaurant à Avignon","Il devient directeur de l'hôtel"],
+     a:1, exp:"Georges quitte l'hôtel pour ouvrir un restaurant raffiné à Avignon."}
+  ]
+},
+{
+  id:"resume", tab:"Résumé perso", eyebrow:"Rédaction finale",
+  title:"Résumé personnel", isResume:true,
+  body:`<div class="recit">
+  <p class="lede">Rédige un résumé personnel de l'histoire <b>(entre 120 et 180 mots)</b>.</p>
+  <p class="lede" style="font-size:16px;">Tu ne peux pas copier-coller le texte du livre ni utiliser un résumé trouvé sur Internet. Utilise tes propres mots.</p>
+  </div>
+  <div class="resume-box">
+    <textarea id="resumeTextarea" rows="12" placeholder="Écris ici ton résumé personnel..." oninput="onResumeInput()"></textarea>
+    <div class="resume-meta">
+      <span id="resumeWordCount">0 mot</span>
+      <span id="resumeStatus" class="resume-status"></span>
+    </div>
+    <div class="resume-warning" id="resumePasteWarning" style="display:none;">⚠️ Le copier-coller est désactivé ici : ce résumé doit être écrit avec tes propres mots.</div>
+  </div>`,
+  quiz:[]
+},
+{
+  id:"bilan", tab:"Bilan final", eyebrow:"Fin de l'enquête",
+  title:"Bilan final", isBilan:true,
+  body:``, quiz:[]
+}
+];
+
+let current = 0;
+let answered = {};        // key: chapterIndex-questionIndex -> true (attempted)
+let correctFlag = {};     // key: chapterIndex-questionIndex -> true/false (was it right?)
+let chosenOpt = {};       // key: chapterIndex-questionIndex -> chosen option index
+let totalQ = chapters.reduce((s,c)=>s+c.quiz.length,0);
+
+// ---------- RESUME PERSONNEL (student's own final summary) ----------
+let resumeText = '';
+let resumeWarnTimeout = null;
+
+function countWords(str){
+  const trimmed = (str||'').trim();
+  if(!trimmed) return 0;
+  return trimmed.split(/\s+/).length;
+}
+function isResumeDone(){
+  const wc = countWords(resumeText);
+  return wc>=120 && wc<=180;
+}
+function onResumeInput(){
+  const ta = document.getElementById('resumeTextarea');
+  if(!ta) return;
+  resumeText = ta.value;
+  const wc = countWords(resumeText);
+  const wcEl = document.getElementById('resumeWordCount');
+  if(wcEl) wcEl.textContent = wc + (wc===1?' mot':' mots');
+  const statusEl = document.getElementById('resumeStatus');
+  if(statusEl){
+    if(wc===0){
+      statusEl.textContent = '';
+      statusEl.className = 'resume-status';
+    } else if(wc<120){
+      statusEl.textContent = `Encore ${120-wc} mot(s) minimum`;
+      statusEl.className = 'resume-status low';
+    } else if(wc>180){
+      statusEl.textContent = `${wc-180} mot(s) de trop`;
+      statusEl.className = 'resume-status low';
+    } else {
+      statusEl.textContent = '✓ Longueur correcte';
+      statusEl.className = 'resume-status ok';
+    }
+  }
+  renderNav();
+  const nextBtn = document.getElementById('navNextBtn');
+  if(nextBtn) nextBtn.disabled = !(current<chapters.length-1 && isChapterDone(current));
+  clearTimeout(resumeSaveTimeout);
+  resumeSaveTimeout = setTimeout(saveState, 400);
+}
+function showResumeWarning(){
+  const w = document.getElementById('resumePasteWarning');
+  if(!w) return;
+  w.style.display = 'block';
+  clearTimeout(resumeWarnTimeout);
+  resumeWarnTimeout = setTimeout(()=>{ w.style.display='none'; }, 4000);
+}
+function hydrateResume(){
+  const ta = document.getElementById('resumeTextarea');
+  if(!ta) return;
+  ta.value = resumeText;
+  onResumeInput();
+  ta.addEventListener('paste', function(e){
+    e.preventDefault();
+    showResumeWarning();
+  });
+  ta.addEventListener('contextmenu', function(e){
+    e.preventDefault();
+    showResumeWarning();
+  });
+  ta.addEventListener('keydown', function(e){
+    const key = (e.key||'').toLowerCase();
+    if((e.ctrlKey || e.metaKey) && key==='v'){
+      e.preventDefault();
+      showResumeWarning();
+    }
+  });
+}
+
+// ---------- STUDENT INFO (for the PDF cover page) ----------
+let studentInfo = { firstName:'', lastName:'', classe:'', date:'' };
+function saveStudentInfo(){
+  studentInfo.firstName = (document.getElementById('stuFirstName')||{}).value?.trim() || '';
+  studentInfo.lastName = (document.getElementById('stuLastName')||{}).value?.trim() || '';
+  studentInfo.classe = (document.getElementById('stuClasse')||{}).value?.trim() || '';
+  studentInfo.date = (document.getElementById('stuDate')||{}).value || '';
+  saveState();
+}
+function formatDateFr(iso){
+  if(!iso) return '';
+  const parts = iso.split('-');
+  if(parts.length!==3) return iso;
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
+function escapeHtml(str){
+  return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ---------- PERSISTENCE (localStorage, per browser/device) ----------
+const STORAGE_KEY = 'mgh_dossier_v1';
+let resumeSaveTimeout = null;
+
+function saveState(){
+  try{
+    const state = { answered, correctFlag, chosenOpt, current, resumeText, studentInfo };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }catch(e){ /* storage unavailable (private mode, quota...) - fail silently */ }
+}
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const state = JSON.parse(raw);
+    if(state.answered) answered = state.answered;
+    if(state.correctFlag) correctFlag = state.correctFlag;
+    if(state.chosenOpt) chosenOpt = state.chosenOpt;
+    if(typeof state.current === 'number') current = state.current;
+    if(typeof state.resumeText === 'string') resumeText = state.resumeText;
+    if(state.studentInfo) studentInfo = Object.assign(studentInfo, state.studentInfo);
+  }catch(e){ /* corrupted or unavailable storage - start fresh */ }
+}
+
+// AUDIO: filled in once mp3 files are provided. Format: { "ch1": "data:audio/mpeg;base64,...." }
+const audioFiles = {"couverture": ["01_Titre_Mystères_au_Grand_Hôtel.mp3", null], "ch1": ["02_Chapitre_1_-_Le_départ.mp3", null], "ch2": ["03_Chapitre_2_-_Le_Grand_Hôtel.mp3", null], "ch3": ["04_Chapitre_3_-_La_première_jour_de_travail.mp3", "05_Exercice_2__p__26.mp3"], "ch4": ["06_Chapitre_4_-_un_nouvel_ami.mp3", "07_Exercice_2__p__32.mp3"], "ch5": ["08_Chapitre_5_-_Monsieur_Hernry.mp3", "09_Exercice_2__p__39.mp3"], "ch6": ["10_Chapitre_6_-_Un_incident_déplaisant.mp3", null], "ch7": ["11_Chapitre_7_-_Encore_un_incident_déplaisant.mp3", "12_Exercice_2__p__53.mp3"], "ch8": ["13_Chapitre_8_-_La_malchance_continue.mp3", null], "ch9": ["14_Chapitre_9_-_La_fin_d_un_cauchemar.mp3", "15_Exercice_1__p__73.mp3"], "ch10": ["16_Chapitre_10_-_Six_mois_plus_tard.mp3", null]};
+
+function isChapterDone(i){
+  const c = chapters[i];
+  if(c.isResume) return isResumeDone();
+  if(c.quiz.length===0) return true;
+  return c.quiz.every((q,qi)=>answered[i+'-'+qi]);
+}
+function isUnlocked(i){
+  if(i===0) return true;
+  return isChapterDone(i-1);
+}
+
+function renderNav(){
+  const nav = document.getElementById('navTabs');
+  nav.innerHTML = chapters.map((c,i)=>{
+    const solved = isChapterDone(i) && c.quiz.length>0;
+    const unlocked = isUnlocked(i);
+    return `<div class="tab ${i===current?'active':''} ${solved?'solved':''} ${unlocked?'':'locked'}" onclick="goTo(${i})">
+      <span class="num">${i===0?'—':String(i).padStart(2,'0')}</span> ${c.tab}
+      ${unlocked? '<span class="done-dot"></span>' : '<span class="lock-icon">🔒</span>'}
+    </div>`;
+  }).join('');
+}
+
+// ---------- TEXT-TO-SPEECH NARRATION (Web Speech API, French voice, word highlighting) ----------
+let frenchVoice = null;
+function pickFrenchVoice(){
+  if(!('speechSynthesis' in window)) return null;
+  const voices = window.speechSynthesis.getVoices();
+  if(!voices.length) return null;
+  const fr = voices.filter(v=>v.lang && v.lang.toLowerCase().startsWith('fr'));
+  if(!fr.length) return null;
+  const scored = fr.map(v=>{
+    let score = 0;
+    const n = v.name.toLowerCase();
+    if(v.lang.toLowerCase()==='fr-fr') score += 3;
+    if(n.includes('google')) score += 3;
+    if(n.includes('natural') || n.includes('premium') || n.includes('enhanced') || n.includes('neural')) score += 4;
+    if(n.includes('compact')) score -= 2;
+    if(v.localService) score += 1;
+    return {v, score};
+  });
+  scored.sort((a,b)=>b.score-a.score);
+  return scored[0].v;
+}
+if('speechSynthesis' in window){
+  frenchVoice = pickFrenchVoice();
+  window.speechSynthesis.onvoiceschanged = ()=>{ frenchVoice = pickFrenchVoice(); };
+}
+
+let ttsState = { words:[], offsets:[], wordPtr:0, key:null, rate:1 };
+
+function countWordsSpoken(str){ return (str||'').trim().split(/\s+/).filter(Boolean); }
+
+function getNarrationContainer(){
+  const paper = document.getElementById('paperContent');
+  if(!paper) return null;
+  return paper.querySelector('.recit') || paper.querySelector('.cover-grid > div:first-child');
+}
+
+function wrapWords(container){
+  const paras = container.querySelectorAll('p');
+  const words = [];
+  const plainParts = [];
+  paras.forEach(p=>{
+    const text = p.textContent;
+    plainParts.push(text);
+    const tokens = text.split(/(\s+)/);
+    const frag = document.createDocumentFragment();
+    tokens.forEach(tok=>{
+      if(tok.trim()===''){
+        frag.appendChild(document.createTextNode(tok));
+      } else {
+        const span = document.createElement('span');
+        span.className = 'word';
+        span.textContent = tok;
+        frag.appendChild(span);
+        words.push(span);
+      }
+    });
+    p.innerHTML = '';
+    p.appendChild(frag);
+  });
+  return { words, text: plainParts.join(' ') };
+}
+
+function computeWordOffsets(text, wordTexts){
+  const offsets = [];
+  let searchFrom = 0;
+  wordTexts.forEach(w=>{
+    const idx = text.indexOf(w, searchFrom);
+    offsets.push(idx<0 ? searchFrom : idx);
+    if(idx>=0) searchFrom = idx + w.length;
+  });
+  return offsets;
+}
+
+function highlightWord(i){
+  ttsState.words.forEach((w,wi)=>w.classList.toggle('word-active', wi===i));
+  const el = ttsState.words[i];
+  if(el) el.scrollIntoView({block:'nearest', behavior:'smooth'});
+}
+function clearHighlight(){
+  ttsState.words.forEach(w=>w.classList.remove('word-active'));
+}
+
+function updatePlayIcon(key){
+  const btn = document.getElementById('playbtn-'+key);
+  if(!btn) return;
+  const speaking = 'speechSynthesis' in window && window.speechSynthesis.speaking && !window.speechSynthesis.paused;
+  btn.textContent = (ttsState.key===key && speaking) ? '⏸' : '▶';
+}
+
+function stopSpeaking(){
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  clearHighlight();
+  const prevKey = ttsState.key;
+  ttsState = { words:[], offsets:[], wordPtr:0, key:null, rate:ttsState.rate };
+  if(prevKey){
+    const box = document.getElementById('audiobox-'+prevKey);
+    if(box) box.classList.remove('playing');
+    updatePlayIcon(prevKey);
+  }
+}
+
+function speakChapter(key){
+  if(!('speechSynthesis' in window)){
+    alert("La lecture audio n'est pas disponible sur ce navigateur.");
+    return;
+  }
+  if(ttsState.key===key && window.speechSynthesis.speaking){
+    if(window.speechSynthesis.paused){ window.speechSynthesis.resume(); }
+    else { window.speechSynthesis.pause(); }
+    updatePlayIcon(key);
+    return;
+  }
+  window.speechSynthesis.cancel();
+  const container = getNarrationContainer();
+  if(!container) return;
+  const { words, text } = wrapWords(container);
+  const offsets = computeWordOffsets(text, words.map(w=>w.textContent));
+  ttsState = { words, offsets, wordPtr:0, key, rate: ttsState.rate || 1 };
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'fr-FR';
+  if(frenchVoice) utter.voice = frenchVoice;
+  utter.rate = ttsState.rate;
+
+  utter.onboundary = (e)=>{
+    if(e.name && e.name!=='word') return;
+    const idx = e.charIndex;
+    while(ttsState.wordPtr < ttsState.offsets.length-1 && ttsState.offsets[ttsState.wordPtr+1] <= idx){
+      ttsState.wordPtr++;
+    }
+    highlightWord(ttsState.wordPtr);
+  };
+  utter.onstart = ()=>{
+    const box = document.getElementById('audiobox-'+key);
+    if(box) box.classList.add('playing');
+    updatePlayIcon(key);
+  };
+  const onDoneOrError = ()=>{
+    const box = document.getElementById('audiobox-'+key);
+    if(box) box.classList.remove('playing');
+    clearHighlight();
+    updatePlayIcon(key);
+  };
+  utter.onend = onDoneOrError;
+  utter.onerror = onDoneOrError;
+
+  window.speechSynthesis.speak(utter);
+}
+
+function setRate(key, rate){
+  ttsState.rate = parseFloat(rate);
+  if(ttsState.key===key && 'speechSynthesis' in window && window.speechSynthesis.speaking){
+    speakChapter(key); // restart to apply the new rate (Web Speech API can't change rate mid-utterance)
+  }
+}
+
+function renderAudio(c, key){
+  const hasAudio = !!c.audioLabel;
+  if(!hasAudio) return '';
+  return `<div class="audio-box" id="audiobox-${key}"><span class="ico">🔊</span>
+      <div style="flex:1">
+        <div class="lbl-row">
+          <span style="font-size:11px;letter-spacing:1px;text-transform:uppercase;opacity:.75;">Narration audio (voix de synthèse française)</span>
+          <span class="eq"><span></span><span></span><span></span></span>
+        </div>
+        <div class="tts-controls">
+          <button type="button" class="tts-btn" id="playbtn-${key}" onclick="speakChapter('${key}')" title="Lire / Pause">▶</button>
+          <button type="button" class="tts-btn tts-stop" onclick="stopSpeaking()" title="Arrêter">■</button>
+          <select class="tts-rate" onchange="setRate('${key}', this.value)" title="Vitesse">
+            <option value="0.85">0.85×</option>
+            <option value="1" selected>1×</option>
+            <option value="1.15">1.15×</option>
+          </select>
+        </div>
+      </div></div>`;
+}
+
+function hydrateAudio(key){
+  // Keeps word-highlighting working if this chapter is re-rendered (e.g. after answering a question)
+  // while it is currently being narrated.
+  if(ttsState.key===key && 'speechSynthesis' in window && window.speechSynthesis.speaking){
+    const container = getNarrationContainer();
+    if(container){
+      const { words } = wrapWords(container);
+      ttsState.words = words;
+      highlightWord(ttsState.wordPtr);
+    }
+    const box = document.getElementById('audiobox-'+key);
+    if(box) box.classList.add('playing');
+  }
+  updatePlayIcon(key);
+}
+
+function renderBilan(){
+  let correctCount=0;
+  const rows = chapters.filter(c=>c.quiz.length).map((c,idx)=>{
+    const i = chapters.indexOf(c);
+    let ok=0;
+    c.quiz.forEach((q,qi)=>{ if(correctFlag[i+'-'+qi]) {ok++; correctCount++;} });
+    const pct = Math.round((ok/c.quiz.length)*100);
+    const tagClass = pct===100?'ok':(pct>=50?'mid':'low');
+    return {title:c.title, ok, total:c.quiz.length, pct, tagClass, i};
+  });
+  const pctTotal = totalQ? Math.round((correctCount/totalQ)*100):0;
+
+  let reviewHtml = '';
+  rows.forEach(r=>{
+    if(r.pct<100){
+      const c = chapters[r.i];
+      c.quiz.forEach((q,qi)=>{
+        if(!correctFlag[r.i+'-'+qi]){
+          reviewHtml += `<div class="review-item"><b>${c.title}</b> — ${q.q}<br><span style="color:var(--wine)">→ ${q.opts[q.a]}</span></div>`;
+        }
+      });
+    }
+  });
+  if(!reviewHtml) reviewHtml = `<p class="lede">Aucune erreur — dossier parfaitement résolu ! 🏆</p>`;
+
+  return `
+    <div class="bilan-score">
+      <div class="big">${pctTotal}%</div>
+      <div class="lbl">${correctCount} / ${totalQ} bonnes réponses</div>
+    </div>
+    <div class="divider"><span>Détail par chapitre</span></div>
+    ${rows.map(r=>`<div class="bilan-row"><span>${r.title}</span><span class="tag ${r.tagClass}">${r.ok}/${r.total}</span></div>`).join('')}
+    <div class="divider"><span>À revoir</span></div>
+    ${reviewHtml}
+    <div class="reset-link" onclick="resetAll()">↺ Recommencer toute l'enquête</div>
+  `;
+}
+
+function renderPaper(){
+  const c = chapters[current];
+  const paper = document.getElementById('paperContent');
+
+  if(c.isBilan){
+    paper.innerHTML = `
+      <div class="chapter-eyebrow">${c.eyebrow}</div>
+      <div class="chapter-title">${c.title}</div>
+      ${renderBilan()}
+      <div class="nav-buttons">
+        <button class="btn" onclick="goTo(${current-1})">← Précédent</button>
+        <div></div>
+      </div>`;
+    return;
+  }
+
+  let quizHtml = '';
+  if(c.quiz.length){
+    quizHtml = `<div class="divider"><span>Enquête — vérifiez votre compréhension</span></div><div class="quiz">` +
+      c.quiz.map((q,qi)=>{
+        const key = current+'-'+qi;
+        const wasAnswered = answered[key];
+        let fbText = '';
+        if(wasAnswered){
+          fbText = (correctFlag[key] ? '✓ Exact — ' : '✗ Pas tout à fait — ') + q.exp;
+        }
+        return `<div class="q" id="q-${qi}">
+          <div class="qtext">${qi+1}. ${q.q}</div>
+          ${q.opts.map((o,oi)=>`<button class="opt" onclick="checkAnswer(${qi},${oi})" ${wasAnswered?'disabled':''} data-oi="${oi}">${o}</button>`).join('')}
+          <div class="feedback" id="fb-${qi}">${fbText}</div>
+        </div>`;
+      }).join('') + `</div>
+      <div class="lockmsg" id="lockmsg">Répondez à toutes les questions ci-dessus pour débloquer la suite du dossier.</div>`;
+  }
+  const nextUnlocked = current<chapters.length-1 && isChapterDone(current);
+  paper.innerHTML = `
+    <div class="chapter-eyebrow">${c.eyebrow}</div>
+    <div class="chapter-title">${c.title}</div>
+    ${renderAudio(c, c.id)}
+    ${c.body}
+    ${quizHtml}
+    <div class="nav-buttons">
+      <button class="btn" ${current===0?'disabled':''} onclick="goTo(${current-1})">← Précédent</button>
+      <button class="btn" id="navNextBtn" ${nextUnlocked?'':'disabled'} onclick="goTo(${current+1})">Chapitre suivant →</button>
+    </div>
+  `;
+  if(c.quiz.length && !isChapterDone(current)){
+    document.getElementById('lockmsg').style.display='block';
+  }
+  hydrateAudio(c.id);
+  if(c.isResume) hydrateResume();
+  // reapply correct/wrong styling if already answered
+  if(c.quiz.length){
+    c.quiz.forEach((q,qi)=>{
+      const key = current+'-'+qi;
+      if(answered[key]){
+        const btns = document.querySelectorAll(`#q-${qi} .opt`);
+        btns.forEach((b,oi)=>{
+          if(oi===q.a) b.classList.add('correct');
+          else if(oi===chosenOpt[key]) b.classList.add('wrong');
+        });
+      }
+    });
+  }
+}
+
+function checkAnswer(qi, oi){
+  const c = chapters[current];
+  const q = c.quiz[qi];
+  const key = current+'-'+qi;
+  if(answered[key]) return;
+  answered[key] = true;
+  chosenOpt[key] = oi;
+  correctFlag[key] = (oi===q.a);
+  updateScore();
+  renderNav();
+  renderPaper(); // refresh: shows correct/wrong styling, unlocks "next" button, hides lock message if done
+  saveState();
+}
+
+function updateScore(){
+  const solvedCount = Object.values(correctFlag).filter(v=>v===true).length;
+  document.getElementById('scoreLabel').textContent = solvedCount + ' / ' + totalQ;
+  const pct = totalQ ? Math.round((solvedCount/totalQ)*100) : 0;
+  document.getElementById('progressBar').style.width = pct + '%';
+}
+
+function resetAll(){
+  if(!confirm("Veux-tu vraiment recommencer toute l'enquête ? Tes réponses et ton résumé seront effacés.")) return;
+  stopSpeaking();
+  answered = {};
+  correctFlag = {};
+  chosenOpt = {};
+  current = 0;
+  resumeText = '';
+  try{ localStorage.removeItem(STORAGE_KEY); }catch(e){ /* ignore */ }
+  renderNav();
+  renderPaper();
+  updateScore();
+}
+
+function goTo(i){
+  if(!isUnlocked(i)) return;
+  stopSpeaking();
+  current = i;
+  renderNav();
+  renderPaper();
+  saveState();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function buildPrintable(){
+  let html = '';
+
+  // ---- Cover page: title + student info filled in before printing ----
+  const fullName = [studentInfo.firstName, studentInfo.lastName].filter(Boolean).join(' ');
+  html += `<div class="print-chapter"><div class="print-cover">
+    <h1>Mystères au Grand Hôtel</h1>
+    <p style="font-family:'Courier Prime',monospace;text-transform:uppercase;letter-spacing:2px;font-size:12.5px;color:#7c2735;margin-top:6px;">Dossier de lecture — Niveau A2</p>
+    <div class="print-cover-fields">
+      <div><span>Prénom et nom :</span> ${escapeHtml(fullName) || '……………………………………………'}</div>
+      <div><span>Classe :</span> ${escapeHtml(studentInfo.classe) || '……………………'}</div>
+      <div><span>Date :</span> ${studentInfo.date ? formatDateFr(studentInfo.date) : '……………………'}</div>
+    </div>
+  </div></div>`;
+
+  // ---- One page per chapter: only the student's own selected answers, no correction ----
+  chapters.forEach(c=>{
+    if(c.isBilan || c.isResume || c.id==='couverture') return;
+    const i = chapters.indexOf(c);
+    html += `<div class="print-chapter">
+      <div class="chapter-eyebrow">${c.eyebrow}</div>
+      <div class="chapter-title">${c.title}</div>`;
+    if(c.quiz.length){
+      html += `<div class="divider"><span>Réponses données</span></div>`;
+      c.quiz.forEach((q,qi)=>{
+        const key = i+'-'+qi;
+        const chosenIdx = chosenOpt[key];
+        const chosenText = (chosenIdx!==undefined) ? q.opts[chosenIdx] : null;
+        html += `<div class="print-answer">
+          <div class="print-q">${qi+1}. ${q.q}</div>
+          <div class="print-a">${chosenText ? '→ '+escapeHtml(chosenText) : '<i>(pas de réponse)</i>'}</div>
+        </div>`;
+      });
+    }
+    html += `</div>`;
+  });
+
+  // ---- Résumé personnel, written by the student, ready for teacher correction ----
+  const resumeChap = chapters.find(c=>c.isResume);
+  html += `<div class="print-chapter">
+    <div class="chapter-title">${resumeChap ? resumeChap.title : 'Résumé personnel'}</div>
+    <div class="print-resume-text">${resumeText.trim() ? escapeHtml(resumeText).replace(/\n/g,'<br>') : '<i>(résumé non rédigé)</i>'}</div>
+    <div class="print-resume-count">${countWords(resumeText)} mots</div>
+  </div>`;
+
+  // ---- Score obtained — no per-question correction, only the final tally ----
+  const solvedCount = Object.values(correctFlag).filter(v=>v===true).length;
+  const pct = totalQ ? Math.round((solvedCount/totalQ)*100) : 0;
+  html += `<div class="print-chapter">
+    <div class="chapter-title">Score obtenu</div>
+    <div class="print-score">${solvedCount} / ${totalQ} — ${pct}%</div>
+  </div>`;
+
+  document.getElementById('printArea').innerHTML = html;
+}
+
+function preparePrint(){
+  stopSpeaking();
+  buildPrintable();
+  window.print();
+}
+
+loadState();
+const stuFirstEl = document.getElementById('stuFirstName');
+if(stuFirstEl) stuFirstEl.value = studentInfo.firstName || '';
+const stuLastEl = document.getElementById('stuLastName');
+if(stuLastEl) stuLastEl.value = studentInfo.lastName || '';
+const stuClasseEl = document.getElementById('stuClasse');
+if(stuClasseEl) stuClasseEl.value = studentInfo.classe || '';
+const stuDateEl = document.getElementById('stuDate');
+if(stuDateEl) stuDateEl.value = studentInfo.date || new Date().toISOString().slice(0,10);
+saveStudentInfo();
+renderNav();
+renderPaper();
+updateScore();
+buildPrintable();
+</script>
+</body>
+</html>
